@@ -52,6 +52,7 @@ a:hover { text-decoration:underline; }
 
 .diagram-wrapper { margin:2.5rem auto; max-width:980px; background:#fff; padding:1.5rem 1.8rem; border-radius:var(--radius); box-shadow:var(--shadow-sm); }
 .diagram-wrapper img { filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08)); }
+.diagram-wrapper svg { width:100%; height:auto; max-width:100%; display:block; }
 .diagram-wrapper figcaption { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:#666; margin-top:.75rem; }
 
 .pipeline-grid { display:grid; gap:2rem; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-top:3rem; }
