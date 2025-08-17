@@ -53,6 +53,17 @@ a:hover { text-decoration:underline; }
 .diagram-wrapper { margin:2.5rem auto; max-width:980px; background:#fff; padding:1.5rem 1.8rem; border-radius:var(--radius); box-shadow:var(--shadow-sm); }
 .diagram-wrapper img { filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08)); }
 .diagram-wrapper svg { width:100%; height:auto; max-width:100%; display:block; }
+.vertical-pipeline { display:none; }
+.vertical-pipeline .v-stage { background:#fff; border:1px solid #e1e2e5; padding:.9rem 1rem 1rem; border-radius:14px; box-shadow:var(--shadow-sm); }
+.vertical-pipeline .v-stage h4 { margin:.1rem 0 .35rem; font-size:.85rem; letter-spacing:.5px; }
+.vertical-pipeline .v-stage .v-sub { margin:0; font-size:.7rem; color:#555; letter-spacing:.3px; }
+.vertical-pipeline .v-arrow { text-align:center; font-size:1.2rem; line-height:1.2; margin:.35rem 0; color:#888; }
+.vertical-pipeline .v-footer { margin-top:.6rem; font-size:.65rem; text-transform:uppercase; letter-spacing:.8px; color:#666; text-align:center; }
+
+@media (max-width: 760px) {
+	.horizontal-diagram { display:none; }
+	.vertical-pipeline { display:flex; flex-direction:column; gap:.4rem; }
+}
 .diagram-wrapper figcaption { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:#666; margin-top:.75rem; }
 
 .pipeline-grid { display:grid; gap:2rem; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-top:3rem; }

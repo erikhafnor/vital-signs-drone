@@ -52,8 +52,8 @@
       <h2>Pipeline Overview</h2>
       <p class="section-intro">Seven modular stages—each with clear inputs, outputs, and measurable quality criteria. Built for iteration and A/B evaluation.</p>
       <figure class="diagram-wrapper">
-        <!-- Inlined SVG to avoid any path / loading issues -->
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 300" role="img" aria-label="Pipeline Diagram: Acquisition, Stabilization, Mesh & ROIs, Noise Model, rPPG, Fusion & HR" preserveAspectRatio="xMidYMid meet">
+        <!-- Desktop / tablet horizontal diagram -->
+        <svg class="horizontal-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 300" role="img" aria-label="Pipeline Diagram: Acquisition, Stabilization, Mesh & ROIs, Noise Model, rPPG, Fusion & HR" preserveAspectRatio="xMidYMid meet">
           <style>
             .stage { fill:#ffffff; stroke:#d0d3d8; stroke-width:1.4; rx:18; }
             .label { font:500 13px -apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif; fill:#0d0d0f; }
@@ -108,6 +108,39 @@
           <line class="arrow" x1="970" y1="95" x2="1000" y2="95" />
           <text class="subtitle" x="20" y="190">Output: HR / Resp Rate + Confidence + Metadata Log</text>
         </svg>
+        <!-- Mobile vertical diagram -->
+        <div class="vertical-pipeline" aria-label="Vertical Pipeline Diagram">
+          <div class="v-stage">
+            <h4>1. Acquisition</h4>
+            <p class="v-sub">Exposure lock • 1080p60</p>
+          </div>
+          <div class="v-arrow" aria-hidden="true">↓</div>
+          <div class="v-stage">
+            <h4>2. Stabilization</h4>
+            <p class="v-sub">Gimbal + digital align</p>
+          </div>
+          <div class="v-arrow" aria-hidden="true">↓</div>
+          <div class="v-stage">
+            <h4>3. Mesh & ROIs</h4>
+            <p class="v-sub">Face mesh • 30 regions</p>
+          </div>
+          <div class="v-arrow" aria-hidden="true">↓</div>
+          <div class="v-stage">
+            <h4>4. Noise Model</h4>
+            <p class="v-sub">Regression of motion & light</p>
+          </div>
+          <div class="v-arrow" aria-hidden="true">↓</div>
+          <div class="v-stage">
+            <h4>5. rPPG</h4>
+            <p class="v-sub">POS + CHROM band-pass</p>
+          </div>
+          <div class="v-arrow" aria-hidden="true">↓</div>
+          <div class="v-stage">
+            <h4>6. Fusion & HR</h4>
+            <p class="v-sub">SNR gating • Median spectra</p>
+          </div>
+          <div class="v-footer">Output: HR / Resp Rate + Confidence + Metadata</div>
+        </div>
         <figcaption>High-level data flow. Each block is independently testable.</figcaption>
       </figure>
 
