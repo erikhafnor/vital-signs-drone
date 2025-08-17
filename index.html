@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Drone Remote Vital Signs Pipeline</title>
+  <meta name="description" content="Feasible pipeline for drone-based remote vital signs (rPPG & respiration) with specifications, justifications, tech stack, and learning outcomes." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="site-header fade-in">
+    <nav class="nav" aria-label="Primary">
+      <div class="logo">VitalDrone<span class="accent">Lab</span></div>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links">☰</button>
+      <ul id="nav-links" class="nav-links">
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#specs">Specifications</a></li>
+        <li><a href="#stack">Tech Stack</a></li>
+        <li><a href="#learning">Learning Outcomes</a></li>
+        <li><a href="#phases">Phases</a></li>
+        <li><a href="#risks">Feasibility</a></li>
+      </ul>
+    </nav>
+    <section class="hero">
+      <h1 class="gradient-text">Drone-Based Remote Vital Signs Assessment</h1>
+      <p class="lead">A minimal, scientifically grounded pipeline to estimate heart rate and respiration from stabilized aerial video with explainable signal processing and reproducible engineering.</p>
+      <div class="cta-group">
+        <a class="btn primary" href="#pipeline">Explore Pipeline</a>
+        <a class="btn ghost" href="#stack">Tech Stack</a>
+      </div>
+      <p class="tagline">Designed for student capstone projects & translational research pitches.</p>
+    </section>
+  </header>
+
+  <main>
+    <section id="why" class="section narrow fade-in">
+      <h2>Why This Project?</h2>
+      <p>Rapid triage in disaster or remote scenarios benefits from non-contact vital signs. Drones provide reach; modern computer vision & rPPG algorithms provide physiological insight. This project delivers a <strong>feasible, sub-$1k experimental platform</strong> with clear learning pathways in vision, signal processing, systems, and ethics.</p>
+      <div class="pill-grid">
+        <div class="pill">Low-cost hardware path</div>
+        <div class="pill">Explainable methods</div>
+        <div class="pill">Modular architecture</div>
+        <div class="pill">Research-ready data</div>
+        <div class="pill">Scalable analysis</div>
+        <div class="pill">Open tools</div>
+      </div>
+    </section>
+
+    <section id="pipeline" class="section fade-in">
+      <h2>Pipeline Overview</h2>
+      <p class="section-intro">Seven modular stages—each with clear inputs, outputs, and measurable quality criteria. Built for iteration and A/B evaluation.</p>
+      <figure class="diagram-wrapper">
+        <img src="pipeline.svg" alt="Pipeline diagram: Capture → Stabilize → ROI & Mesh → Noise Modeling → rPPG Extraction (POS/CHROM) → Quality & Fusion → Vital Metrics & Storage" />
+        <figcaption>High-level data flow. Each block is independently testable.</figcaption>
+      </figure>
+
+      <div class="pipeline-grid">
+        <article class="pipe-step" data-step="1">
+          <h3>1. Acquisition & Exposure Control</h3>
+          <p><strong>Goal:</strong> Obtain raw / lightly compressed 1080p60 (or 30 fps min) stable frames with maximized facial dynamic range (target 98th percentile 75–90% of 8-bit scale).</p>
+          <ul>
+            <li>Manual exposure & white balance lock.</li>
+            <li>Subject distance tuned for ≥120 px face width.</li>
+            <li>Shutter ~1/120–1/240 s to limit motion blur.</li>
+          </ul>
+          <p class="justification">Optimizes signal-to-noise before any algorithm touches data.</p>
+        </article>
+        <article class="pipe-step" data-step="2">
+          <h3>2. Mechanical + Digital Stabilization</h3>
+          <p>Use 3-axis gimbal (hardware) + feature / landmark based frame alignment (software) to minimize inter-frame pixel drift.</p>
+          <ul>
+            <li>Estimate affine transform via keypoint matches.</li>
+            <li>Reject frames with blur / sharpness below threshold.</li>
+          </ul>
+          <p class="justification">Reduces motion-induced chrominance noise.</p>
+        </article>
+        <article class="pipe-step" data-step="3">
+          <h3>3. Face Mesh & ROI Selection</h3>
+          <p>Detect face → run MediaPipe mesh → pick forehead & cheek sub-ROIs (exclude eyes, mouth, hair) for robust perfusion signals.</p>
+          <ul>
+            <li>30 micro-ROIs (statistical redundancy).</li>
+            <li>Adaptive ROI disable if occluded / shadowed.</li>
+          </ul>
+          <p class="justification">Localized averaging improves SNR & fault tolerance.</p>
+        </article>
+        <article class="pipe-step" data-step="4">
+          <h3>4. Noise Regressor Construction</h3>
+          <p>Assemble matrix of candidate nuisance signals: landmark trajectories & derivatives, gimbal orientation, drone IMU/GPS (if accessible), global luminance proxies, non-perfused regions.</p>
+          <ul>
+            <li>Least-squares fit per ROI/color channel.</li>
+            <li>Subtractive de-noising: Y - X·M.</li>
+          </ul>
+          <p class="justification">Explicitly models structured motion & illumination noise instead of over-filtering.</p>
+        </article>
+        <article class="pipe-step" data-step="5">
+          <h3>5. rPPG Extraction (Ensemble)</h3>
+          <p>Apply chrominance-based methods (POS & CHROM) plus optional learned model (future extension) to project RGB signals to pulse waveform.</p>
+          <ul>
+            <li>Band-pass 0.7–3.5 Hz (HR) & 0.1–0.5 Hz (Resp).</li>
+            <li>Outlier suppression (temporal Hampel filter).</li>
+          </ul>
+          <p class="justification">Algorithm diversity mitigates method-specific failure modes.</p>
+        </article>
+        <article class="pipe-step" data-step="6">
+          <h3>6. Quality Metrics & Fusion</h3>
+          <p>Sliding windows (e.g., 5 s, 2 s hop) → FFT → peak & SNR checks → reject low-confidence spectra → median fusion across ROIs & methods.</p>
+          <ul>
+            <li>SNR threshold (e.g., ≥2.5%).</li>
+            <li>Low-frequency dominance filter.</li>
+          </ul>
+          <p class="justification">Prevents noisy segments from biasing final estimates.</p>
+        </article>
+        <article class="pipe-step" data-step="7">
+          <h3>7. Vital Metric Output & Storage</h3>
+          <p>Compute HR (bpm) & Respiration Rate (brpm) + confidence interval; log synchronized metadata (exposure, motion scores) to research datastore.</p>
+          <ul>
+            <li>Export JSON + optional live dashboard.</li>
+            <li>Automated reproducibility hash of config.</li>
+          </ul>
+          <p class="justification">Traceability & audit support for scientific rigor.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="specs" class="section alt fade-in">
+      <h2>Key Specifications & Justifications</h2>
+      <div class="spec-grid" role="table" aria-label="Specifications">
+        <div class="spec-item" role="row">
+          <div class="spec-name" role="cell">Video Mode</div>
+          <div class="spec-value" role="cell">1080p @ 60 fps (30 fps minimum)</div>
+          <div class="spec-why" role="cell">60 fps improves frequency resolution & reduces aliasing; 1080p ensures ≥120 px face ROI.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Shutter</div>
+          <div class="spec-value">1/120–1/240 s</div>
+          <div class="spec-why">Balances light and motion blur suppression for color stability.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Exposure Strategy</div>
+          <div class="spec-value">Face-targeted percentile (98th → 75–90% scale)</div>
+          <div class="spec-why">Maximizes SNR without clipping perfusion waveform.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Gimbal</div>
+          <div class="spec-value">3-axis (consumer mini series)</div>
+          <div class="spec-why">Hardware stabilization reduces downstream correction load.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">ROIs</div>
+            <div class="spec-value">30 micro-regions (forehead & cheeks)</div>
+            <div class="spec-why">Spatial redundancy & adaptive pruning of noisy patches.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Filtering</div>
+          <div class="spec-value">Band-pass 0.7–3.5 Hz (HR) / 0.1–0.5 Hz (Resp)</div>
+          <div class="spec-why">Captures physiologic bands while excluding slow drift & high-frequency noise.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Window Length</div>
+          <div class="spec-value">5 s (overlap hop 2 s)</div>
+          <div class="spec-why">Trade-off: frequency resolution vs responsiveness in triage context.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Noise Modeling</div>
+          <div class="spec-value">Linear regression (X·M)</div>
+          <div class="spec-why">Explainable, fast, leverages sensor & geometric metadata.</div>
+        </div>
+        <div class="spec-item" role="row">
+          <div class="spec-name">Ensemble</div>
+          <div class="spec-value">POS + CHROM (+ optional ML)</div>
+          <div class="spec-why">Combines complementary chrominance assumptions.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack" class="section fade-in">
+      <h2>Frameworks & Technologies</h2>
+      <div class="stack-grid">
+        <div class="stack-item">
+          <h3>Acquisition</h3>
+          <p>Consumer mini drone (e.g., DJI Mini 2/3) capturing stabilized 1080p60 MP4 or onboard storage for offline extraction.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Video I/O</h3>
+          <p><strong>FFmpeg</strong> for frame extraction & transcoding; <strong>PyAV</strong> or <strong>OpenCV</strong> for streaming pipelines.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Vision / Mesh</h3>
+          <p><strong>MediaPipe</strong> face mesh; fallback: <strong>Dlib</strong> or lightweight ONNX landmark model.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Signal Processing</h3>
+          <p><strong>NumPy</strong>, <strong>SciPy</strong> (band-pass, FFT, windowing), <strong>Pandas</strong> for synchronized metadata.</p>
+        </div>
+        <div class="stack-item">
+          <h3>rPPG Algorithms</h3>
+          <p>Custom POS / CHROM implementations; extension path: <strong>PyTorch</strong> model for learned projection.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Quality & Metrics</h3>
+          <p>SNR computation, peak prominence via SciPy; Bland–Altman & error metrics via <strong>seaborn/matplotlib</strong>.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Packaging</h3>
+          <p><strong>Poetry</strong> or <strong>pip-tools</strong> for reproducible env; <strong>Docker</strong> for deployment parity.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Automation</h3>
+          <p><strong>GitHub Actions</strong> CI: lint (ruff), tests (pytest), build docs (MkDocs) & publish Pages.</p>
+        </div>
+        <div class="stack-item">
+          <h3>Data Governance</h3>
+          <p>Metadata manifest (JSON), hashed configs, optional consent-tracking module (CSV → signed ledger).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="learning" class="section alt fade-in">
+      <h2>Learning Outcomes</h2>
+      <div class="learning-columns">
+        <div>
+          <h3>Computer Vision</h3>
+          <ul>
+            <li>Implement multi-stage face & landmark tracking.</li>
+            <li>Evaluate stabilization methods (optical vs sensor-based).</li>
+            <li>Optimize ROI selection for physiological SNR.</li>
+          </ul>
+          <h3>Signal Processing</h3>
+          <ul>
+            <li>Design band-pass filters & windowing strategies.</li>
+            <li>Apply regression-based artifact removal.</li>
+            <li>Quantify spectral SNR & confidence metrics.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Systems & UAV</h3>
+          <ul>
+            <li>Integrate gimbal/drone telemetry with video streams.</li>
+            <li>Manage latency & synchronization issues.</li>
+            <li>Assess environmental constraints (wind, lighting).</li>
+          </ul>
+          <h3>Data & Research</h3>
+          <ul>
+            <li>Design reproducible experiments & baseline benchmarks.</li>
+            <li>Perform statistical agreement analyses (Bland–Altman).</li>
+            <li>Document ethically responsible data handling.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Software Engineering</h3>
+          <ul>
+            <li>Structure modular Python package for experimentation.</li>
+            <li>Create automated CI/CD & documentation pipeline.</li>
+            <li>Implement configuration versioning & provenance logging.</li>
+          </ul>
+          <h3>Innovation & Communication</h3>
+          <ul>
+            <li>Translate research methods into actionable specs.</li>
+            <li>Prepare stakeholder pitch artifacts.</li>
+            <li>Perform risk analysis & mitigation planning.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="phases" class="section fade-in">
+      <h2>Suggested Project Phases</h2>
+      <ol class="phase-list">
+        <li><strong>Week 1–2:</strong> Hardware validation & raw data capture baseline.</li>
+        <li><strong>Week 3–4:</strong> Stabilization + face mesh ROI extraction module.</li>
+        <li><strong>Week 5–6:</strong> Noise regression & basic POS/CHROM signals.</li>
+        <li><strong>Week 7–8:</strong> Quality gating + fusion + initial accuracy report.</li>
+        <li><strong>Week 9–10:</strong> Respiration extension & dashboard prototype.</li>
+        <li><strong>Week 11–12:</strong> Optimization, ablations, final paper & pitch deck.</li>
+      </ol>
+    </section>
+
+    <section id="risks" class="section alt fade-in">
+      <h2>Feasibility & Risk Mitigation</h2>
+      <div class="risk-grid">
+        <div class="risk-item">
+          <h3>Motion Jitter</h3>
+          <p><strong>Mitigation:</strong> Choose calm conditions, gimbal platform, discard high-blur frames, add digital stabilization.</p>
+        </div>
+        <div class="risk-item">
+          <h3>Low SNR</h3>
+          <p><strong>Mitigation:</strong> Face exposure targeting, ND filters, multi-ROI averaging, ensemble chrominance methods.</p>
+        </div>
+        <div class="risk-item">
+          <h3>Data Loss</h3>
+          <p><strong>Mitigation:</strong> Over-sample sessions, real-time quality monitor, redundancy logging.</p>
+        </div>
+        <div class="risk-item">
+          <h3>Ethical / Privacy</h3>
+          <p><strong>Mitigation:</strong> Consent forms, anonymized IDs, restricted storage, documented retention policy.</p>
+        </div>
+        <div class="risk-item">
+          <h3>Overfitting</h3>
+          <p><strong>Mitigation:</strong> Cross-subject validation, hold-out evaluation, configuration hashing.</p>
+        </div>
+        <div class="risk-item">
+          <h3>Scope Creep</h3>
+          <p><strong>Mitigation:</strong> Freeze spec after Phase 2, maintain backlog, weekly milestone reviews.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="cta" class="section fade-in">
+      <h2>Pitch Ready</h2>
+      <p>This concise architecture, justified specifications, and clear learning outcomes position the project for approval by senior researchers & academic committees.</p>
+      <a class="btn primary" href="#" aria-disabled="true">(Optional) Download Proposal PDF – Coming Soon</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> VitalDroneLab • Educational & research concept • MIT-style licensing suggested.</p>
+  </footer>
+</body>
+</html>
