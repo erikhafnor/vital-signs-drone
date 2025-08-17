@@ -1,0 +1,6 @@
+**14. Drone-Based Vital Sign Estimation (Lab)**
+Core: Drone hover camera rPPG while compensating micro-motion.
+MVP: Stabilized ROI → heart rate.
+Stretch: Optical flow motion compensation; energy vs accuracy curve.
+Components: Stable indoor drone, camera feed, signal processing.
+Ethics: Safety (prop guards), privacy.

@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Node / frontend caches
+node_modules/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.venv
+.env
+
+# VSCode
+.vscode/
+
+# Build artifacts
+build/
+dist/
+
+# Misc
+Thumbs.db
